@@ -534,7 +534,7 @@ UTexture2D* ULuaBlueprintFunctionLibrary::LuaValueToTransientTexture(int32 Width
 			return nullptr;
 		}
 
-#if ENGINE_MINOR_VERSION >= 25
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25 || ENGINE_MAJOR_VERSION >= 5
 		TArray<uint8> UncompressedBytes;
 #else
 		const TArray<uint8>* UncompressedBytes = nullptr;
@@ -547,7 +547,7 @@ UTexture2D* ULuaBlueprintFunctionLibrary::LuaValueToTransientTexture(int32 Width
 		PixelFormat = EPixelFormat::PF_B8G8R8A8;
 		Width = ImageWrapper->GetWidth();
 		Height = ImageWrapper->GetHeight();
-#if ENGINE_MINOR_VERSION >= 25
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 25 || ENGINE_MAJOR_VERSION >= 5
 		Bytes = UncompressedBytes;
 #else
 		Bytes = *UncompressedBytes;
@@ -606,7 +606,7 @@ void ULuaBlueprintFunctionLibrary::LuaHttpRequest(UObject* WorldContextObject, T
 	if (!L)
 		return;
 
-#if ENGINE_MINOR_VERSION >= 26
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 26 || ENGINE_MAJOR_VERSION >= 5
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
 #else
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
@@ -675,7 +675,7 @@ void ULuaBlueprintFunctionLibrary::LuaRunURL(UObject* WorldContextObject, TSubcl
 			return;
 		}
 	}
-#if ENGINE_MINOR_VERSION >= 26
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 26 || ENGINE_MAJOR_VERSION >= 5
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
 #else
 	TSharedRef<IHttpRequest> HttpRequest = FHttpModule::Get().CreateRequest();
@@ -1820,7 +1820,7 @@ bool ULuaBlueprintFunctionLibrary::LuaLoadPakFile(const FString& Filename, FStri
 		bCustomPakPlatformFile = true;
 	}
 
-	FPakFile PakFile(PakPlatformFile, *Filename, false);
+	TRefCountPtr<FPakFile> PakFile(new FPakFile(PakPlatformFile, *Filename, false));
 	if (!PakFile.IsValid())
 	{
 		UE_LOG(LogLuaMachine, Error, TEXT("Unable to open PakFile"));
@@ -1834,11 +1834,11 @@ bool ULuaBlueprintFunctionLibrary::LuaLoadPakFile(const FString& Filename, FStri
 
 	FPaths::MakeStandardFilename(Mountpoint);
 
-	FString PakFileMountPoint(PakFile.GetMountPoint());
+	FString PakFileMountPoint(PakFile->GetMountPoint());
 	FPaths::MakeStandardFilename(PakFileMountPoint);
-	PakFile.SetMountPoint(*PakFileMountPoint);
+	PakFile->SetMountPoint(*PakFileMountPoint);
 
-	if (!PakPlatformFile->Mount(*Filename, 0, *PakFile.GetMountPoint()))
+	if (!PakPlatformFile->Mount(*Filename, 0, *PakFile->GetMountPoint()))
 	{
 		UE_LOG(LogLuaMachine, Error, TEXT("Unable to mount PakFile"));
 		if (bCustomPakPlatformFile)
@@ -1854,7 +1854,7 @@ bool ULuaBlueprintFunctionLibrary::LuaLoadPakFile(const FString& Filename, FStri
 		ContentPath = "/Plugins" + Mountpoint + "Content/";
 	}
 
-	FString MountDestination = PakFile.GetMountPoint() + ContentPath;
+	FString MountDestination = PakFile->GetMountPoint() + ContentPath;
 	FPaths::MakeStandardFilename(MountDestination);
 
 	FPackageName::RegisterMountPoint(Mountpoint, MountDestination);
@@ -1862,7 +1862,7 @@ bool ULuaBlueprintFunctionLibrary::LuaLoadPakFile(const FString& Filename, FStri
 	IAssetRegistry& AssetRegistry = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
 
 #if WITH_EDITOR
-#if ENGINE_MINOR_VERSION > 23
+#if ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION > 23 || ENGINE_MAJOR_VERSION >= 5
 	int32 bPreviousGAllowUnversionedContentInEditor = GAllowUnversionedContentInEditor;
 #else
 	bool bPreviousGAllowUnversionedContentInEditor = GAllowUnversionedContentInEditor;
@@ -1876,7 +1876,7 @@ bool ULuaBlueprintFunctionLibrary::LuaLoadPakFile(const FString& Filename, FStri
 	}
 
 	FArrayReader SerializedAssetData;
-	if (!FFileHelper::LoadFileToArray(SerializedAssetData, *(PakFile.GetMountPoint() + AssetRegistryPath)))
+	if (!FFileHelper::LoadFileToArray(SerializedAssetData, *(PakFile->GetMountPoint() + AssetRegistryPath)))
 	{
 		UE_LOG(LogLuaMachine, Error, TEXT("Unable to parse AssetRegistry file"));
 		if (bCustomPakPlatformFile)
