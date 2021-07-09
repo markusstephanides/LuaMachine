@@ -1,6 +1,8 @@
 # LuaMachine
 ![LuaMachine Logo](Docs/LuaMachine_Logo.png?raw=true "LuaMachine Logo")
 
+This fork includes experimental UE 4.27, UE 5 and state instancing support (made by https://github.com/Dgrouse96/LuaMachine/tree/Instanced-Lua-States) 
+
 Unreal Engine 4 Plugin for adding Lua scripting to your projects.
 
 If you want modders to customize your game/project, or you need to allow game designers to script parts of the logic, or more generally you want a framework for adding lua scripting capabilities to your projects, this plugin is for you.
